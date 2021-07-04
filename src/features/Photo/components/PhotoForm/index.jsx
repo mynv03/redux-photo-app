@@ -1,10 +1,9 @@
 import { PHOTO_CATEGORY_OPTIONS } from "constants/global";
 import PropTypes from "prop-types";
 import React from "react";
-import Select from "react-select";
-import { Button, FormGroup, Input, Label } from "reactstrap";
-import Images from "constants/images";
+import { Button, FormGroup, Input, Label, Spinner } from "reactstrap";
 import { Formik, Form, FastField } from "formik";
+import * as yup from 'yup';
 import InputField from "components/custom-fields/InputField";
 import SelectField from "components/custom-fields/selectField";
 import RandomPhotoField from "components/custom-fields/randomPhotoField";
@@ -21,14 +20,28 @@ function PhotoForm(props) {
   const initialValues = {
     title: "",
     categoryId: null,
+    photo: ""
   };
+  const validationSchema = yup.object().shape({
+    title: yup.string().required('This field is required.'),
+
+    categoryId: yup.number().required('This field is required.').positive().integer().nullable(),
+
+    photo: yup.string().when('categoryId', {
+      is: 1,
+      then: yup.string().required('This field is required.'),
+      otherwise: yup.string().notRequired()
+    }),
+  });
   return (
     <Formik 
       initialValues={initialValues}
-      onSubmit={values => console.log(values)}
+      validationSchema={validationSchema}
+      onSubmit={props.onSubmit}
     >
       {(formikProps) => {
-        const { values, errors, touched } = formikProps;
+        const { values, errors, touched, isSubmitting } = formikProps;
+        console.log({ values, errors, touched })
         return (
           <Form>
             <FastField
@@ -53,7 +66,10 @@ function PhotoForm(props) {
             />
 
             <FormGroup>
-              <Button color="primary">Add to album</Button>
+              <Button color="primary">
+                {isSubmitting && <Spinner size="sm"></Spinner>}
+                Add to album  
+              </Button>
             </FormGroup>
           </Form>
         );
